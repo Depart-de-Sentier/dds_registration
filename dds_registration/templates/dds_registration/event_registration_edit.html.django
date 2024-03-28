@@ -45,7 +45,7 @@
 
   <fieldset class="common-actions mb3 form-group">
     <input class="btn btn-primary" type="submit" value="Save" />
-    <a class="btn btn-default" href="{% url 'index' %}" onClick="history.back(); return false">Back</a>
+    {% include "assets/back-button/back-button.django" %}
     <a class="btn btn-default" href="{% url 'profile' %}">Go to profile</a>
   </fieldset>
 

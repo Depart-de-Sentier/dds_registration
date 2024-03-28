@@ -32,7 +32,7 @@
 
   <fieldset class="mb3 form-group">
     <input class="btn btn-primary" type="submit" value="Test" />
-    <a class="btn btn-default" href="{% url 'index' %}" onClick="history.back(); return false">Back</a>
+    {% include "assets/back-button/back-button.django" %}
   </fieldset>
 
 </form>

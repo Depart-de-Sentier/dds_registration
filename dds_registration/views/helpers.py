@@ -309,7 +309,7 @@ def get_event_registration_form_context(request: HttpRequest, event_code: str, c
             # Set/update parameters...
             reg.option = option
             # The status is set to either SUBMITTED or PAYMENT_PENDING, depending on the event type
-            reg.status = "PAYMENT_PENDING"
+            reg.status = "SUIBMITTED"  # Later will be changed to "PAYMENT_PENDING" ()at the moment of invoice creation)
             # TODO: Issue #63: Create and set an invoice? + Add a template selection to the form?
             #  reg.payment_method = payment_method
             #  reg.extra_invoice_text = extra_invoice_text

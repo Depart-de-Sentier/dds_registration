@@ -4,9 +4,9 @@
   @changed 2024.03.28, 12:14
 -->
 
-{# TODO: Show questions, Issue #35 #}
+{# TODO: Show questions? -- Issue #35 #}
 
-{# Issue #63: payment_method is unused }
+{# Issue #63: payment_method is unused #}
 {% if PAYMENT_METHODS %}
   <fieldset id="payment_method" class="mb3 form-group">
     <legend class="mb-3 primary-color">Payment method</legend>

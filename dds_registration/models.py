@@ -1,5 +1,5 @@
 # @module models.py
-# @changed 2024.03.28, 11:50
+# @changed 2024.03.28, 19:28
 
 import random
 import string
@@ -16,7 +16,11 @@ from django.urls import reverse
 
 # from queryable_properties.properties import queryable_property
 
-from .core.constants.date_time_formats import dateTimeFormat
+from .core.constants.date_time_formats import (
+    #  dateTimeFormat,
+    #  onlyDateFormat,
+    dateFormat,
+)
 from .core.helpers.dates import this_year
 
 
@@ -75,6 +79,22 @@ class User(AbstractUser):
             self._original_username = self.username
             # TODO: To do smth else if email has changed?
 
+    def get_full_name_with_email(self):
+        name = self.get_full_name()
+        email = self.email
+        if not name and email:
+            name = email
+        items = [
+            name,
+            "<{}>".format(email) if email and email != name else "",
+        ]
+        info = "  ".join(filter(None, map(str, items)))
+        return info
+
+    @property
+    def full_name_with_email(self):
+        return self.get_full_name_with_email()
+
     def clean(self):
         # NOTE: This method is called before `save`: it's useless to compare email and here
         #  from django.core.exceptions import ValidationError
@@ -103,7 +123,7 @@ class Membership(Model):
     ]
     DEFAULT_MEMBERSHIP_TYPE = "NORMAL"
 
-    # NOTE: Old membership type definition
+    # NOTE: Old membership type definition (TODO: Remove after refactor finishes)
     #  # Membership type:
     #  MEMBERSHIP_TYPES = (
     #      ("NORMAL_CREDIT_CARD", "Normal membership - Pay by credit card"),
@@ -264,7 +284,7 @@ class Message(Model):
     def __str__(self):
         items = [
             self.event,
-            self.created_at.strftime(dateTimeFormat) if self.created_at else None,
+            self.created_at.strftime(dateFormat) if self.created_at else None,
             "emailed" if self.emailed else None,
         ]
         info = ", ".join(filter(None, map(str, items)))
@@ -292,7 +312,7 @@ class Invoice(Model):
         ("G-EUR", "Generic - EUR"),
         ("G-CAD", "Generic - CAD"),
     ]
-    DEFAULT_INVOICE_TEMPLATE = INVOICE_TEMPLATES[0][0]
+    DEFAULT_INVOICE_TEMPLATE = "G-USD"  # INVOICE_TEMPLATES[0][0]
 
     PAYMENT_METHODS = [
         ("STRIPE", "Stripe"),
@@ -303,6 +323,9 @@ class Invoice(Model):
 
     id = models.AutoField(primary_key=True)
 
+    name = models.TextField(blank=False, default="")
+    address = models.TextField(blank=False, default="")
+
     #  invoice_no = models.IntegerField(primary_key=True)
 
     payment_method = models.TextField(choices=PAYMENT_METHODS, default=DEFAULT_PAYMENT_METHOD)
@@ -312,10 +335,14 @@ class Invoice(Model):
 
     # Includes the various item descriptions, prices, and currencies
     # and any other necessary info
-    data = models.JSONField()
+    data = models.JSONField(null=True, blank=True, help_text="JSON object ({...})")  # default=dict
 
     # The specific form will depend on the template
     template = models.TextField(choices=INVOICE_TEMPLATES, default=DEFAULT_INVOICE_TEMPLATE)
+
+    extra_invoice_text = models.TextField(blank=True, default="")
+
+    # TODO: reg
 
     @property
     def invoice_no(self):
@@ -323,10 +350,21 @@ class Invoice(Model):
         Same as the actual invoice number, which normally has the form
         {two-digit-year}{zero-padded four digit number starting from 1}
         """
-        created = self.created  # date.today()
-        year_str = created.strftime("%y")
+        if not self.created or not self.id:
+            return "NOT-CREATED-YET"
+        year_str = self.created.strftime("%y")
         invoice_no = "#{}{:0>4}".format(year_str, self.id)
         return invoice_no
+
+    def __str__(self):
+        items = [
+            self.invoice_no,
+            self.status,
+            self.template,
+            self.created.strftime(dateFormat) if self.created else None,
+        ]
+        info = ", ".join(filter(None, map(str, items)))
+        return info
 
 
 # NOTE: A single reusable QuerySet to check if the registration active
@@ -350,9 +388,7 @@ class Registration(Model):
         ("WITHDRAWN", "Withdrawn"),  # = Inactive
     ]
 
-    ACTIVE_QUERY = REGISTRATION_ACTIVE_QUERY
-
-    invoice = models.ForeignKey(Invoice, related_name="invoices", on_delete=models.CASCADE, null=True)
+    invoice = models.ForeignKey(Invoice, related_name="registrations", on_delete=models.SET_NULL, null=True)
     event = models.ForeignKey(Event, related_name="registrations", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="registrations", on_delete=models.CASCADE)
 
@@ -375,9 +411,9 @@ class Registration(Model):
 
     def __str__(self):
         items = [
-            self.user.get_full_name(),
-            self.user.email,
-            self.created_at.strftime(dateTimeFormat) if self.created_at else None,
+            self.user.full_name_with_email,
+            self.status,
+            self.created_at.strftime(dateFormat) if self.created_at else None,
         ]
         info = ", ".join(filter(None, map(str, items)))
         return info

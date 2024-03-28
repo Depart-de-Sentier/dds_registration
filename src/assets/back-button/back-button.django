@@ -1,0 +1,2 @@
+{# ex: set ft=htmldjango : #}
+<a class="btn btn-default" href="{% url 'index' %}" onClick="history.back(); return false">Back</a>

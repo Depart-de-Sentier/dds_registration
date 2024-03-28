@@ -5,10 +5,39 @@ from django.forms.models import ModelForm
 
 from django_registration.forms import RegistrationForm as BaseRegistrationForm
 
-from .models import Event, RegistrationOption, User
+from .models import (
+    Event,
+    RegistrationOption,
+    User,
+    Invoice,
+)
 
 # A text field to use in those TextField's which don't require large texts, but can use one-line text inputs
 textInputWidget = forms.TextInput(attrs={"class": "vLargeTextField"})
+textAreaWidget = forms.Textarea(attrs={"class": "vLargeTextField", "rows": 5})
+
+
+class BillingEventForm(ModelForm):
+
+    class Meta:
+        model = Invoice
+        fields = [
+            "name",
+            "address",
+            "payment_method",
+            "template",
+            "extra_invoice_text",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "address": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "extra_invoice_text": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].required = True
+        self.fields["address"].required = True
 
 
 class DdsRegistrationForm(BaseRegistrationForm):
@@ -40,12 +69,6 @@ class DdsRegistrationForm(BaseRegistrationForm):
             "password2": forms.PasswordInput(attrs={"class": "form-control"}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["email"].required = True
-        self.fields["first_name"].required = True
-        self.fields["last_name"].required = True
-
 
 class RegistrationOptionAdminForm(ModelForm):
     class Meta:
@@ -63,18 +86,33 @@ class EventAdminForm(ModelForm):
             "code": textInputWidget,
             "title": textInputWidget,
             "currency": textInputWidget,
+            "description": textAreaWidget,
+            "payment_details": textAreaWidget,
         }
         fields = "__all__"
 
 
-# Issue #63: Temporarily unused
-#  class DiscountCodeAdminForm(ModelForm):
-#      class Meta:
-#          model = DiscountCode
-#          widgets = {
-#              "code": textInputWidget,
-#          }
-#          fields = "__all__"
+class InvoiceAdminForm(ModelForm):
+    class Meta:
+        model = Invoice
+        widgets = {
+            "name": textInputWidget,
+            "address": textAreaWidget,
+            "data": textAreaWidget,
+            "extra_invoice_text": textAreaWidget,
+        }
+        fields = "__all__"
+
+
+class UserAdminForm(ModelForm):
+    class Meta:
+        model = User
+        widgets = {
+            "first_name": textInputWidget,
+            "last_name": textInputWidget,
+            "address": textAreaWidget,
+        }
+        fields = "__all__"
 
 
 class SignUpForm(UserCreationForm):
@@ -111,15 +149,11 @@ class UpdateUserForm(forms.ModelForm):
         ]
 
 
-#  # UNUSED: Address has integrated into the base user model
-#  class UpdateProfileForm(forms.ModelForm):
-#      address = forms.CharField(
-#          required=False,
-#          widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
-#      )
-#
+# Issue #63: Temporarily unused
+#  class DiscountCodeAdminForm(ModelForm):
 #      class Meta:
-#          model = Profile
-#          fields = [
-#              'address',
-#          ]
+#          model = DiscountCode
+#          widgets = {
+#              "code": textInputWidget,
+#          }
+#          fields = "__all__"

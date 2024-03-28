@@ -3,7 +3,12 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin import SimpleListFilter
 from django.db.models import Q
 
-from .forms import EventAdminForm, RegistrationOptionAdminForm
+from .forms import (
+    EventAdminForm,
+    RegistrationOptionAdminForm,
+    InvoiceAdminForm,
+    UserAdminForm,
+)
 from .models import (
     # Issue #63: Temporarily unused
     #  DiscountCode,
@@ -44,6 +49,7 @@ class IsRegularUserFilter(SimpleListFilter):
 
 
 class UserAdmin(BaseUserAdmin):
+    form = UserAdminForm
 
     #  # UNUSED: Address has integrated into the base user model
     #  inlines = (ProfileInline,)
@@ -144,20 +150,11 @@ class RegistrationAdmin(admin.ModelAdmin):
 
     def user_column(self, reg):
         user = reg.user
-        full_name = user.get_full_name()
-        name = full_name if full_name else user.email
-        if user.email:
-            name += " <{}>".format(user.email)
+        name = user.full_name_with_email
         return name
 
     user_column.short_description = "User"
     user_column.admin_order_field = "user"
-
-    #  def invoice_name(self, reg):
-    #      return "Invoice #{}".format(reg.invoice_no)
-    #
-    #  invoice_name.short_description = "Invoice"
-    #  invoice_name.admin_order_field = "invoice_no"
 
     def options_column(self, reg):
         return ", ".join([p.item for p in [reg.option]])
@@ -213,13 +210,26 @@ admin.site.register(Event, EventAdmin)
 
 
 class InvoiceAdmin(admin.ModelAdmin):
+    form = InvoiceAdminForm
+    # TODO: Show related objects: registration, membership etc?
+    readonly_fields = [
+        "invoice_no",
+        "registrations_column",
+    ]
     list_display = [
         "invoice_no",
-        "created",
         "status",
-        "data",
+        #  "data",
         "template",
+        "registrations_column",
+        "created",
     ]
+
+    def registrations_column(self, invoice):
+        registrations = invoice.registrations.all()
+        return "; ".join(filter(None, map(str, registrations)))
+
+    registrations_column.short_description = "Registrations"
 
 
 admin.site.register(Invoice, InvoiceAdmin)
