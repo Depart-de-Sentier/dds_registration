@@ -1,0 +1,32 @@
+{# ex: set ft=htmldjango : #}
+<!--
+  @module dds_registration/templates/dds_registration/billing/billing_test.html.django
+  @changed 2024.03.28, 16:47
+-->
+
+{% extends "base-regular.html.django" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Billing (test) — {{ block.super }}{% endblock title %}
+
+{% block content %}
+{{ block.super }}
+
+<fieldset>
+  <legend>
+    <h1 class="page-title primary-color">Billing (test)</h1>
+  </legend>
+  {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+</fieldset>
+
+{% include "assets/render-messages/render-messages.django" %}
+
+<p>Billing...</p>
+
+<p>user: {{ user }}</p>
+<p>event: {{ event }}</p>
+<p>registration: {{ registration }}</p>
+<p>invoice: {{ invoice }}</p>
+
+{% endblock content %}

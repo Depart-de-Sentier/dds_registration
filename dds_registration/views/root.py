@@ -3,7 +3,6 @@
 
 import logging
 import traceback
-from functools import reduce
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest

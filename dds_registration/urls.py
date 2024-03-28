@@ -9,6 +9,7 @@ from django.views.decorators.cache import cache_page
 from . import views
 from .views import membership as membership_views
 from .views import event_registration as event_registration_views
+from .views import billing as billing_views
 from .views import registration as registration_views
 
 from .forms import DdsRegistrationForm
@@ -61,14 +62,32 @@ urlpatterns = [
         name="event_registration_edit_success",
     ),
     path(
+        # Download invoice page (delete or move to billing?)
         "event/<str:event_code>/registration/invoice",
         event_registration_views.event_registration_invoice,
         name="event_registration_invoice",
     ),
     path(
+        # Download invoice pdf (delete or move to billing?)
+        "event/<str:event_code>/registration/invoice/download",
+        event_registration_views.event_registration_invoice_download,
+        name="event_registration_invoice_download",
+    ),
+    path(
         "event/<str:event_code>/registration/payment",
         event_registration_views.event_registration_payment,
         name="event_registration_payment",
+    ),
+    # Billing...
+    path(
+        "billing/event/<str:event_code>",
+        billing_views.billing_event,
+        name="billing_event",
+    ),
+    path(
+        "billing/membership",
+        billing_views.billing_membership,
+        name="billing_membership",
     ),
     # Membership...
     path(
@@ -91,7 +110,6 @@ urlpatterns = [
         membership_views.membership_proceed_test,
         name="membership_proceed_test",
     ),
-    # TODO: Add a route with invoice download link (`membership_proceed_invoice`) + an invoice generation route itself (`membership_invoice_download`)
     # Stripe api
     path(
         # TODO: Use more specific url later

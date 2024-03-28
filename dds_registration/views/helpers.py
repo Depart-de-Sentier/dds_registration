@@ -134,7 +134,7 @@ def get_event_registration_form_context(request: HttpRequest, event_code: str, c
     # Issue #62: Preserve old logic for multiple options; Now only one option could be selected
     checked_option_ids = []  # Will be got from post request, see below
     #  payment_method = Registration.DEFAULT_PAYMENT_METHOD
-    extra_invoice_text = ""
+    #  extra_invoice_text = ""
     # Is data ready to save
     data_ready = False
 
@@ -306,9 +306,11 @@ def get_event_registration_form_context(request: HttpRequest, event_code: str, c
                 reg = Registration()
                 reg.event = event
                 reg.user = user
-            reg.option = option
-            # TODO: Issue #63: Create and set an invoice? + Add a template selection to the form?
             # Set/update parameters...
+            reg.option = option
+            # The status is set to either SUBMITTED or PAYMENT_PENDING, depending on the event type
+            reg.status = "PAYMENT_PENDING"
+            # TODO: Issue #63: Create and set an invoice? + Add a template selection to the form?
             #  reg.payment_method = payment_method
             #  reg.extra_invoice_text = extra_invoice_text
             #  if create_new:

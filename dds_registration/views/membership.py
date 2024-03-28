@@ -22,7 +22,7 @@ from ..core.constants.stripe_payments import (
 #  from ..core.helpers.create_invoice_pdf import create_invoice_pdf
 #  from ..core.helpers.errors import errorToString
 
-#  from .get_invoice_context import get_invoice_context
+#  from .get_event_invoice_context import get_event_invoice_context
 
 from ..models import Membership
 
@@ -180,7 +180,7 @@ def membership_proceed_test(request: HttpRequest, payment_id: str):
 #  def membership_proceed_invoice(request: HttpRequest):
 #      # TODO: Generate invoice pdf
 #      template = "dds_registration/membership_invoice.html.django"
-#      context = get_invoice_context(request, event_code)
+#      context = get_event_invoice_context(request, event_code)
 #      show_debug = False
 #      if show_debug:
 #          return render(request, template, context)

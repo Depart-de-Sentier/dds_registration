@@ -7,7 +7,7 @@ import traceback
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from ..core.helpers.create_invoice_pdf import create_invoice_pdf
 from ..core.helpers.errors import errorToString
@@ -16,7 +16,7 @@ from .event_registration_cancel import (
     event_registration_cancel_confirm_form,
     event_registration_cancel_process_action,
 )
-from .get_invoice_context import get_invoice_context
+from .get_invoice_context import get_event_invoice_context, check_is_event_invoice_ready
 from .helpers import (
     event_registration_form,
     get_event_registration_context,
@@ -32,7 +32,7 @@ def event_registration_new(request: HttpRequest, event_code: str):
         request,
         event_code=event_code,
         form_template="dds_registration/event_registration_new.html.django",
-        success_redirect="event_registration_new_success",
+        success_redirect="event_registration_payment",  # "event_registration_new_success",
         create_new=True,
     )
 
@@ -87,9 +87,25 @@ def event_registration_edit_success(request: HttpRequest, event_code: str):
 
 @login_required
 def event_registration_invoice(request: HttpRequest, event_code: str):
+    """
+    Check if there is an invoice for this event/registration.
+    Create it if not.
+    Redirect to or show a download link.
+    """
     # TODO: Generate invoice pdf
     template = "dds_registration/event_registration_invoice.html.django"
-    context = get_invoice_context(request, event_code)
+    context = check_is_event_invoice_ready(request, event_code)
+    context_redirect = context.get("redirect")
+    if context_redirect:
+        return context_redirect
+    return render(request, template, context)
+
+
+@login_required
+def event_registration_invoice_download(request: HttpRequest, event_code: str):
+    # TODO: Generate invoice pdf
+    template = "dds_registration/event_registration_invoice_download.html.django"
+    context = get_event_invoice_context(request, event_code)
     show_debug = False
     if show_debug:
         return render(request, template, context)
@@ -106,7 +122,7 @@ def event_registration_payment(request: HttpRequest, event_code: str):
         return render(request, template, context)
     except Exception as err:
         sError = errorToString(err, show_stacktrace=False)
-        error_text = 'Can not get payment informatin for event "{}": {}'.format(event_code, sError)
+        error_text = 'Can not get payment information the for event "{}": {}'.format(event_code, sError)
         messages.error(request, error_text)
         sTraceback = str(traceback.format_exc())
         debug_data = {

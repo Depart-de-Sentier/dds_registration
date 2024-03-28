@@ -281,10 +281,10 @@ class Invoice(Model):
         ("PAID", "Paid"),
         ("REFUNDED", "Refunded"),
     ]
+    DEFAULT_INVOICE_STATUS = INVOICE_STATUS[0][0]
 
     INVOICE_TEMPLATES = [
-        # Different templates for specific bank accounts
-        # and layouts
+        # Different templates for specific bank accounts and layouts
         ("M-CHF", "Membership - Swiss Francs"),
         ("M-EUR", "Membership - Euros"),
         ("G-USD", "Generic - USD"),
@@ -292,29 +292,30 @@ class Invoice(Model):
         ("G-EUR", "Generic - EUR"),
         ("G-CAD", "Generic - CAD"),
     ]
+    DEFAULT_INVOICE_TEMPLATE = INVOICE_TEMPLATES[0][0]
 
-    #  # NOTE: Is it used? The `payment_method` has been removed. Should we return it?
-    #  PAYMENT_METHODS = [
-    #      ("STRIPE", "Stripe"),
-    #      ("INVOICE", "Invoice"),
-    #      # Not yet implemented
-    #      ("WISE", "Wise"),
-    #  ]
-
-    #  # TODO: To return it?
-    #  DEFAULT_PAYMENT_METHOD = "STRIPE"
-    #  payment_method = models.TextField(choices=PAYMENT_METHODS, default=DEFAULT_PAYMENT_METHOD)
+    PAYMENT_METHODS = [
+        ("STRIPE", "Stripe"),
+        ("INVOICE", "Invoice"),
+        #  ("WISE", "Wise"),  # Not yet implemented
+    ]
+    DEFAULT_PAYMENT_METHOD = PAYMENT_METHODS[0][0]  # "STRIPE"
 
     id = models.AutoField(primary_key=True)
 
     #  invoice_no = models.IntegerField(primary_key=True)
+
+    payment_method = models.TextField(choices=PAYMENT_METHODS, default=DEFAULT_PAYMENT_METHOD)
+
     created = models.DateField(auto_now_add=True)
-    status = models.TextField(choices=INVOICE_STATUS)
+    status = models.TextField(choices=INVOICE_STATUS, default=DEFAULT_INVOICE_STATUS)
+
     # Includes the various item descriptions, prices, and currencies
     # and any other necessary info
-    # The specific form will depend on the template
     data = models.JSONField()
-    template = models.TextField(choices=INVOICE_TEMPLATES)
+
+    # The specific form will depend on the template
+    template = models.TextField(choices=INVOICE_TEMPLATES, default=DEFAULT_INVOICE_TEMPLATE)
 
     @property
     def invoice_no(self):
@@ -355,9 +356,6 @@ class Registration(Model):
     event = models.ForeignKey(Event, related_name="registrations", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="registrations", on_delete=models.CASCADE)
 
-    # NOTE: See `active` evaluated property below
-    #  active = models.BooleanField(default=True)
-
     # Which kind of registration for the event
     option = models.ForeignKey(RegistrationOption, related_name="options", on_delete=models.CASCADE)
 
@@ -370,8 +368,7 @@ class Registration(Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["event", "user"],
-                condition=REGISTRATION_ACTIVE_QUERY,  # ~Q(status="WITHDRAWN")),  # DECLINED?
-                #  condition=Q(active=True),
+                condition=REGISTRATION_ACTIVE_QUERY,
                 name="Single registration per verified user account",
             )
         ]
